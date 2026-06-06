@@ -1,6 +1,9 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import { useCallback } from 'react';
 import useAuthStore from '@/stores/authStore';
+import useChatStore from '@/stores/chatStore';
+import { wsClient } from '@/lib/websocket';
 import { authService } from '../services/authService';
 import type { LoginRequest, SignupRequest } from '../types/auth.types';
 
@@ -26,4 +29,20 @@ export function useSignup() {
       router.push('/login');
     },
   });
+}
+
+/** JWT 무상태 로그아웃 — 서버 API 없음, 클라이언트 세션 정리 */
+export function useLogout() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const clearAuth = useAuthStore((state) => state.clearAuth);
+  const resetChat = useChatStore((state) => state.resetAll);
+
+  return useCallback(() => {
+    wsClient.disconnect();
+    clearAuth();
+    resetChat();
+    queryClient.clear();
+    router.replace('/login');
+  }, [clearAuth, queryClient, resetChat, router]);
 }

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ChatFlow · 로그인</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  :root {
+    --bg-app: #1a1b1e;
+    --bg-page: #161719;
+    --bg-elevated: #232428;
+    --bg-input: #26272b;
+    --border: #2c2e33;
+    --border-soft: #232428;
+    --text-primary: #e9eaee;
+    --text-secondary: #a3a6ad;
+    --text-muted: #6e7178;
+    --text-faint: #54565c;
+    --accent: #ff7a59;
+    --accent-hover: #ff8d70;
+    --accent-press: #ec6843;
+    --accent-soft: rgba(255,122,89,0.14);
+    --online: #3ba55d;
+    --danger: #ff5b50;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Pretendard','Pretendard Variable',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+    background: var(--bg-app);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.01em;
+    font-size: 14px;
+  }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+  input { font-family: inherit; }
+  a { color: inherit; text-decoration: none; }
+  ::selection { background: var(--accent-soft); color: #fff1ec; }
+
+  .auth { display: flex; height: 100vh; width: 100vw; overflow: hidden; }
+
+  /* ===== Brand side ===== */
+  .brand {
+    flex: 0 0 47%;
+    position: relative;
+    overflow: hidden;
+    padding: 44px 48px;
+    display: flex;
+    flex-direction: column;
+    background:
+      radial-gradient(900px 600px at 18% 12%, rgba(255,122,89,0.16), transparent 60%),
+      radial-gradient(700px 700px at 92% 96%, rgba(255,91,138,0.12), transparent 55%),
+      #131316;
+    border-right: 1px solid var(--border-soft);
+  }
+  .brand::after {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,0.035) 1px, transparent 1px);
+    background-size: 22px 22px;
+    -webkit-mask-image: linear-gradient(180deg, #000, transparent 80%);
+            mask-image: linear-gradient(180deg, #000, transparent 80%);
+    pointer-events: none;
+  }
+  .logo-row { display: flex; align-items: center; gap: 11px; position: relative; z-index: 2; }
+  .logo-mark {
+    width: 38px; height: 38px; border-radius: 11px;
+    background: linear-gradient(135deg, #ff7a59, #ff4f8b);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 22px rgba(255,90,110,0.35);
+  }
+  .logo-word { font-size: 18px; font-weight: 750; letter-spacing: -0.02em; }
+
+  .brand-mid { position: relative; z-index: 2; margin-top: auto; }
+  .brand-eyebrow {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 12.5px; font-weight: 600; color: var(--accent);
+    background: var(--accent-soft); padding: 5px 11px; border-radius: 20px;
+    margin-bottom: 22px;
+  }
+  .brand-eyebrow .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 0 rgba(255,122,89,0.6); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(255,122,89,0.5);} 70%{box-shadow:0 0 0 9px rgba(255,122,89,0);} 100%{box-shadow:0 0 0 0 rgba(255,122,89,0);} }
+  .brand-h {
+    font-size: 38px; font-weight: 780; line-height: 1.22; letter-spacing: -0.03em;
+    margin-bottom: 16px;
+  }
+  .brand-h .grad { background: linear-gradient(120deg,#ff7a59,#ff5b8a); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .brand-p { font-size: 15px; color: var(--text-secondary); line-height: 1.6; max-width: 400px; }
+
+  /* mini product preview */
+  .preview {
+    position: relative; z-index: 2; margin-top: 38px;
+    width: 360px; max-width: 100%;
+    background: rgba(26,27,30,0.72);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 16px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+  }
+  .pv-head { display: flex; align-items: center; gap: 9px; padding-bottom: 12px; border-bottom: 1px solid var(--border-soft); margin-bottom: 12px; }
+  .pv-av { width: 30px; height: 30px; border-radius: 9px; display:flex; align-items:center; justify-content:center; font-size: 12px; font-weight: 700; color:#fff; }
+  .pv-name { font-size: 13px; font-weight: 650; }
+  .pv-sub { font-size: 11px; color: var(--online); display:flex; align-items:center; gap:4px; }
+  .pv-sub .d { width:6px;height:6px;border-radius:50%;background:var(--online); }
+  .pv-msgs { display: flex; flex-direction: column; gap: 8px; }
+  .pv-b { font-size: 13px; line-height: 1.45; padding: 8px 12px; border-radius: 14px; max-width: 80%; }
+  .pv-b.them { background: var(--bg-elevated); border-top-left-radius: 5px; align-self: flex-start; }
+  .pv-b.mine { background: var(--accent); color: #fff; border-top-right-radius: 5px; align-self: flex-end; }
+  .pv-typing { align-self: flex-start; background: var(--bg-elevated); border-radius: 14px; border-top-left-radius:5px; padding: 11px 14px; display: flex; gap: 5px; }
+  .pv-typing .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); animation: blink 1.3s infinite both; }
+  .pv-typing .dot:nth-child(2){animation-delay:.2s;} .pv-typing .dot:nth-child(3){animation-delay:.4s;}
+  @keyframes blink {0%,60%,100%{opacity:.3;transform:translateY(0);}30%{opacity:1;transform:translateY(-3px);}}
+
+  /* ===== Form side ===== */
+  .form-side {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    padding: 40px 32px; overflow-y: auto;
+  }
+  .card { width: 100%; max-width: 392px; }
+  .card-head { margin-bottom: 28px; }
+  .card-mobile-logo { display: none; align-items: center; gap: 10px; margin-bottom: 26px; }
+  .card h1 { font-size: 25px; font-weight: 760; letter-spacing: -0.02em; margin-bottom: 8px; }
+  .card .lede { font-size: 14.5px; color: var(--text-muted); line-height: 1.55; }
+
+  .field { margin-bottom: 16px; }
+  .field > label { display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 7px; }
+  .input-box {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--bg-input); border: 1px solid var(--border);
+    border-radius: 12px; padding: 0 13px; height: 48px;
+    transition: border .14s, background .14s;
+  }
+  .input-box:focus-within { border-color: var(--accent); background: #2b2c31; }
+  .input-box.err { border-color: var(--danger); }
+  .input-box svg { color: var(--text-muted); flex: none; }
+  .input-box input { flex: 1; background: none; border: none; outline: none; color: var(--text-primary); font-size: 14.5px; height: 100%; }
+  .input-box input::placeholder { color: var(--text-faint); }
+  .ghost-btn { color: var(--text-muted); display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: 7px; }
+  .ghost-btn:hover { color: var(--text-secondary); }
+  .err-text { font-size: 12px; color: var(--danger); margin-top: 6px; min-height: 0; display: none; }
+  .field.show-err .err-text { display: block; }
+
+  .row-between { display: flex; align-items: center; justify-content: space-between; margin: 4px 0 22px; }
+  .check { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13.5px; color: var(--text-secondary); user-select: none; }
+  .check input { display: none; }
+  .check .box { width: 18px; height: 18px; border-radius: 6px; border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; transition: .14s; flex: none; }
+  .check input:checked + .box { background: var(--accent); border-color: var(--accent); }
+  .check input:checked + .box svg { opacity: 1; }
+  .check .box svg { opacity: 0; color: #fff; }
+  .link { font-size: 13.5px; color: var(--accent); font-weight: 600; }
+  .link:hover { color: var(--accent-hover); }
+
+  .btn-primary {
+    width: 100%; height: 50px; border-radius: 12px;
+    background: var(--accent); color: #fff; font-size: 15px; font-weight: 680;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: background .14s, transform .08s;
+  }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-primary:active { transform: scale(0.99); }
+
+  .divider { display: flex; align-items: center; gap: 14px; margin: 22px 0; color: var(--text-faint); font-size: 12.5px; }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .socials { display: flex; flex-direction: column; gap: 10px; }
+  .btn-social {
+    width: 100%; height: 48px; border-radius: 12px;
+    border: 1px solid var(--border); background: var(--bg-elevated);
+    color: var(--text-primary); font-size: 14px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    transition: background .14s, border .14s;
+  }
+  .btn-social:hover { background: #2a2c31; border-color: #3a3d44; }
+
+  .foot { text-align: center; margin-top: 26px; font-size: 14px; color: var(--text-muted); }
+  .foot a { color: var(--accent); font-weight: 650; }
+  .foot a:hover { color: var(--accent-hover); }
+
+  @media (max-width: 900px) {
+    .brand { display: none; }
+    .card-mobile-logo { display: flex; }
+  }
+</style>
+</head>
+<body>
+<div class="auth">
+  <!-- Brand side -->
+  <section class="brand">
+    <div class="logo-row">
+      <div class="logo-mark">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z"/></svg>
+      </div>
+      <span class="logo-word">ChatFlow</span>
+    </div>
+
+    <div class="brand-mid">
+      <span class="brand-eyebrow"><span class="pulse"></span>실시간 팀 메신저</span>
+      <h2 class="brand-h">팀이 흐르는 곳,<br /><span class="grad">실시간으로 연결되다</span></h2>
+      <p class="brand-p">대화, 파일, 알림까지 하나로. ChatFlow에서 팀과 더 빠르고 가깝게 소통하세요.</p>
+
+      <div class="preview">
+        <div class="pv-head">
+          <div class="pv-av" style="background:linear-gradient(135deg,#22c19a,#12a37f)">서</div>
+          <div>
+            <div class="pv-name">이서연</div>
+            <div class="pv-sub"><span class="d"></span>온라인</div>
+          </div>
+        </div>
+        <div class="pv-msgs">
+          <div class="pv-b them">새 디자인 시안 공유했어요! 🎨</div>
+          <div class="pv-b mine">와 너무 좋은데요 👏</div>
+          <div class="pv-typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Form side -->
+  <main class="form-side">
+    <form class="card" id="loginForm" novalidate>
+      <div class="card-mobile-logo">
+        <div class="logo-mark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z"/></svg></div>
+        <span class="logo-word">ChatFlow</span>
+      </div>
+
+      <div class="card-head">
+        <h1>다시 오신 걸 환영해요 👋</h1>
+        <p class="lede">ChatFlow 계정으로 로그인하세요.</p>
+      </div>
+
+      <div class="field" id="f-email">
+        <label for="email">이메일</label>
+        <div class="input-box">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg>
+          <input type="email" id="email" name="email" placeholder="you@chatflow.com" autocomplete="email" />
+        </div>
+        <div class="err-text">올바른 이메일 주소를 입력해주세요.</div>
+      </div>
+
+      <div class="field" id="f-pw">
+        <label for="password">비밀번호</label>
+        <div class="input-box">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <input type="password" id="password" name="password" placeholder="비밀번호 입력" autocomplete="current-password" />
+          <button type="button" class="ghost-btn" id="togglePw" aria-label="비밀번호 표시">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <div class="err-text">비밀번호를 입력해주세요.</div>
+      </div>
+
+      <div class="row-between">
+        <label class="check">
+          <input type="checkbox" id="remember" checked />
+          <span class="box"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+          로그인 상태 유지
+        </label>
+        <a href="#" class="link">비밀번호 찾기</a>
+      </div>
+
+      <button type="submit" class="btn-primary">로그인</button>
+
+      <div class="divider">또는</div>
+
+      <div class="socials">
+        <button type="button" class="btn-social">
+          <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.76h3.56c2.08-1.92 3.28-4.74 3.28-8.09Z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.56-2.76c-.98.66-2.23 1.06-3.72 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23Z"/><path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84Z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84C6.71 7.3 9.14 5.38 12 5.38Z"/></svg>
+          Google로 계속하기
+        </button>
+        <button type="button" class="btn-social" style="background:#FEE500;color:#191600;border-color:#FEE500;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#191600"><path d="M12 3C6.48 3 2 6.58 2 11c0 2.82 1.86 5.3 4.66 6.7-.2.72-.74 2.67-.85 3.08-.13.52.19.51.4.37.16-.11 2.6-1.77 3.66-2.49.69.1 1.4.15 2.13.15 5.52 0 10-3.58 10-8s-4.48-8-10-8Z"/></svg>
+          카카오로 계속하기
+        </button>
+      </div>
+
+      <p class="foot">계정이 없으신가요? <a href="Signup.html">회원가입</a></p>
+    </form>
+  </main>
+</div>
+
+<script>
+  const form = document.getElementById('loginForm');
+  const email = document.getElementById('email');
+  const pw = document.getElementById('password');
+  const fEmail = document.getElementById('f-email');
+  const fPw = document.getElementById('f-pw');
+
+  document.getElementById('togglePw').addEventListener('click', () => {
+    pw.type = pw.type === 'password' ? 'text' : 'password';
+  });
+
+  function setErr(field, on) {
+    field.classList.toggle('show-err', on);
+    field.querySelector('.input-box').classList.toggle('err', on);
+  }
+  [email, pw].forEach(inp => inp.addEventListener('input', () => {
+    setErr(inp === email ? fEmail : fPw, false);
+  }));
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim());
+    const pwOk = pw.value.trim().length > 0;
+    setErr(fEmail, !emailOk);
+    setErr(fPw, !pwOk);
+    if (emailOk && pwOk) {
+      window.location.href = 'ChatFlow.html';
+    }
+  });
+</script>
+</body>
+</html>

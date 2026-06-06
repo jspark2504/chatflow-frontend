@@ -1,5 +1,5 @@
 import api from '@/services/api';
-import type { RoomResponse } from '../types/room.types';
+import type { CreateRoomRequest, RoomResponse } from '../types/room.types';
 
 export const roomService = {
   getRooms: async (): Promise<RoomResponse[]> => {
@@ -9,6 +9,11 @@ export const roomService = {
 
   getRoom: async (roomId: number): Promise<RoomResponse> => {
     const res = await api.get<RoomResponse>(`/api/chat/rooms/${roomId}`);
+    return res.data;
+  },
+
+  createRoom: async (data: CreateRoomRequest): Promise<RoomResponse> => {
+    const res = await api.post<RoomResponse>('/api/chat/rooms', data);
     return res.data;
   },
 

@@ -1,20 +1,20 @@
-export interface MessageType {
+export interface MessageResponse {
   messageId: number;
   roomId: number;
   senderId: number;
-  senderNickname: string;
+  messageType: string;
   content: string;
+  read: boolean;
   createdAt: string;
-  readCount: number;
 }
 
-export interface MessageListResponse {
-  messages: MessageType[];
+export interface MessagePageResponse {
+  messages: MessageResponse[];
   hasMore: boolean;
   nextCursor: number | null;
 }
 
-export interface SendMessagePayload {
-  roomId: number;
+export interface SendMessageRequest {
   content: string;
+  messageType?: string;
 }

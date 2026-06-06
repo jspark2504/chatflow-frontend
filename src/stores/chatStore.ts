@@ -1,12 +1,13 @@
 import { create } from 'zustand';
-import type { MessageType } from '@/features/chat/types/chat.types';
+import type { MessageResponse } from '@/features/chat/types/chat.types';
 
 interface ChatState {
-  messagesByRoom: Record<number, MessageType[]>;
-  addMessage: (message: MessageType) => void;
-  prependMessages: (roomId: number, messages: MessageType[]) => void;
-  setMessages: (roomId: number, messages: MessageType[]) => void;
+  messagesByRoom: Record<number, MessageResponse[]>;
+  addMessage: (message: MessageResponse) => void;
+  prependMessages: (roomId: number, messages: MessageResponse[]) => void;
+  setMessages: (roomId: number, messages: MessageResponse[]) => void;
   clearRoom: (roomId: number) => void;
+  resetAll: () => void;
 }
 
 const useChatStore = create<ChatState>((set) => ({
@@ -39,6 +40,8 @@ const useChatStore = create<ChatState>((set) => ({
       delete next[roomId];
       return { messagesByRoom: next };
     }),
+
+  resetAll: () => set({ messagesByRoom: {} }),
 }));
 
 export default useChatStore;

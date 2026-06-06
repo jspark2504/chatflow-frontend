@@ -1,15 +1,26 @@
+export type RoomType = 'DIRECT' | 'GROUP';
+
+export interface RoomMember {
+  userId: number;
+  nickname: string;
+}
+
 export interface RoomResponse {
   roomId: number;
-  name: string;
-  lastMessage: string | null;
-  lastMessageAt: string | null;
+  roomName: string;
+  type: RoomType;
+  memberCount: number;
   unreadCount: number;
   lastReadMessageId: number | null;
+  createdAt: string;
+  members: RoomMember[];
 }
 
 export interface CreateRoomRequest {
-  name: string;
-  participantIds: number[];
+  type: RoomType;
+  roomName?: string;
+  targetUserId?: number;
+  memberUserIds?: number[];
 }
 
 export interface MarkReadRequest {
