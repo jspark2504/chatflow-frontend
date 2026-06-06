@@ -6,6 +6,8 @@ import { chatService } from '../services/chatService';
 import { roomService } from '@/features/room/services/roomService';
 import type { MessageResponse } from '../types/chat.types';
 
+const EMPTY_MESSAGES: MessageResponse[] = [];
+
 type WsFrame =
   | { type: 'MESSAGE'; message: MessageResponse }
   | { type: string; [key: string]: unknown };
@@ -25,7 +27,7 @@ export function useRoomChat(roomId: number) {
   const addMessage = useChatStore((s) => s.addMessage);
   const setMessages = useChatStore((s) => s.setMessages);
   const prependMessages = useChatStore((s) => s.prependMessages);
-  const messages = useChatStore((s) => s.messagesByRoom[roomId] ?? []);
+  const messages = useChatStore((s) => s.messagesByRoom[roomId] ?? EMPTY_MESSAGES);
 
   const [hasMore, setHasMore] = useState(false);
   const [nextCursor, setNextCursor] = useState<number | null>(null);
