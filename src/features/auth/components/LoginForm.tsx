@@ -9,22 +9,36 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { useLogin } from '../hooks/useAuth';
 
+function parseLoginError(err: unknown): string {
+  if (axios.isAxiosError(err)) {
+    const status = err.response?.status;
+    const serverMessage = err.response?.data?.message as string | undefined;
+    if (status === 401) return '이메일 또는 비밀번호가 올바르지 않습니다.';
+    if (status === 400) return serverMessage ?? '입력값을 확인해주세요.';
+    if (status === 500) return '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+    return serverMessage ?? '로그인에 실패했습니다.';
+  }
+  return '로그인에 실패했습니다.';
+}
+
 export default function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
-  const { mutate: login, isPending, error } = useLogin();
-
-  const errorMessage = axios.isAxiosError(error)
-    ? (error.response?.data?.message ?? '로그인에 실패했습니다.')
-    : error
-      ? '로그인에 실패했습니다.'
-      : null;
+  const { mutate: login, isPending } = useLogin();
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    login({ email, password });
+    setFormError(null);
+    login(
+      { email, password },
+      {
+        onError: (err) => setFormError(parseLoginError(err)),
+        onSuccess: () => setFormError(null),
+      },
+    );
   };
 
   return (
@@ -41,10 +55,12 @@ export default function LoginForm() {
           </Label>
           <Input
             id="email"
-            type="email"
+            type="text"
+            inputMode="email"
             placeholder="name@example.com"
             autoComplete="email"
             required
+            pattern="[^@\s]+@[^@\s]+\.[^@\s]+"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="bg-[#2c2e33] border-[#3a3c42] text-white placeholder:text-zinc-500 focus-visible:ring-[#ff7a59] focus-visible:border-[#ff7a59]"
@@ -87,9 +103,9 @@ export default function LoginForm() {
           </button>
         </div>
 
-        {errorMessage && (
+        {formError && (
           <p className="text-sm text-red-400 bg-red-400/10 border border-red-400/20 rounded-lg px-3 py-2">
-            {errorMessage}
+            {formError}
           </p>
         )}
 

@@ -7,6 +7,7 @@ import useAuthStore from '@/stores/authStore';
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
+  const _hasHydrated = useAuthStore((state) => state._hasHydrated);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -14,13 +15,12 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   }, []);
 
   useEffect(() => {
-    if (mounted && user) {
-      router.replace('/');
-    }
-  }, [mounted, user, router]);
+    if (!mounted || !_hasHydrated) return;
+    if (user) router.replace('/chat');
+  }, [mounted, _hasHydrated, user, router]);
 
-  // 하이드레이션 전 또는 로그인 상태면 렌더 생략
-  if (!mounted || user) return null;
+  // hydration 완료 전 또는 로그인 상태이면 렌더 생략
+  if (!mounted || !_hasHydrated || user) return null;
 
   return <>{children}</>;
 }

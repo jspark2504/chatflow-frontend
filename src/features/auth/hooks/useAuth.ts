@@ -11,8 +11,8 @@ export function useLogin() {
   return useMutation({
     mutationFn: (data: LoginRequest) => authService.login(data),
     onSuccess: ({ userId, email, nickname, accessToken }) => {
-      setAuth({ id: userId, email, nickname }, accessToken);
-      router.push('/');
+      setAuth({ id: String(userId), email, nickname }, accessToken);
+      router.replace('/chat');
     },
   });
 }

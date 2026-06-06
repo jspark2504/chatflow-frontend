@@ -40,11 +40,18 @@ export default function SignupForm() {
   const strengthConfig = STRENGTH_CONFIG[strength];
   const passwordMismatch = confirmPassword.length > 0 && password !== confirmPassword;
 
-  const errorMessage = axios.isAxiosError(error)
-    ? (error.response?.data?.message ?? '회원가입에 실패했습니다.')
-    : error
-      ? '회원가입에 실패했습니다.'
-      : null;
+  const errorMessage = (() => {
+    if (!error) return null;
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status;
+      const serverMessage = error.response?.data?.message as string | undefined;
+      if (status === 409) return '이미 사용 중인 이메일입니다.';
+      if (status === 400) return serverMessage ?? '입력값을 확인해주세요.';
+      if (status === 500) return '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+      return serverMessage ?? '회원가입에 실패했습니다.';
+    }
+    return '회원가입에 실패했습니다.';
+  })();
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
