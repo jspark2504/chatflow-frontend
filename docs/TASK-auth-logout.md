@@ -1,18 +1,19 @@
 # 인증 · 로그아웃 · 내 정보 (구현 완료 기준)
 
-## 로그아웃 (프론트 전용)
+## 로그아웃
 
-백엔드 `POST /api/auth/logout` **없음**. JWT 무상태.
+백엔드 `POST /api/auth/logout` **있음**. Bearer 토큰 필요 (`api` 인스턴스 사용).
 
 ### `useLogout()` — `src/features/auth/hooks/useAuth.ts`
 
 로그아웃 시 순서:
 
-1. `wsClient.disconnect()` — WebSocket 재연결 중단
-2. `authStore.clearAuth()` — user, accessToken 삭제 (persist)
-3. `chatStore.resetAll()` — 메시지 캐시 초기화
-4. `queryClient.clear()` — React Query 캐시 초기화
-5. `router.replace('/login')`
+1. `authService.logout()` — `POST /api/auth/logout` (실패해도 클라이언트 정리 계속)
+2. `wsClient.disconnect()` — WebSocket 재연결 중단
+3. `authStore.clearAuth()` — user, accessToken 삭제 (persist)
+4. `chatStore.resetAll()` — 메시지 캐시 초기화
+5. `queryClient.clear()` — React Query 캐시 초기화
+6. `router.replace('/login')`
 
 ### UI 진입점
 
@@ -32,14 +33,14 @@
 ## 파일 맵
 
 ```
-features/auth/hooks/useAuth.ts   → useLogin, useSignup, useLogout
-app/(main)/settings/page.tsx     → 내 정보 페이지
-components/layout/ChatLayout.tsx → 사이드바 프로필 메뉴
-stores/authStore.ts              → clearAuth, persist
-lib/websocket.ts                 → disconnect on logout
+features/auth/hooks/useAuth.ts      → useLogin, useSignup, useLogout
+features/auth/services/authService.ts → login, signup, logout
+app/(main)/settings/page.tsx        → 내 정보 페이지
+components/layout/ChatLayout.tsx    → 사이드바 프로필 메뉴
+stores/authStore.ts                 → clearAuth, persist
+lib/websocket.ts                    → disconnect on logout
 ```
 
 ## Claude Code 확장 시
 
 - 프로필 수정: 백엔드 `PATCH /api/users/me` 추가 후 settings 폼 연결
-- 서버 로그아웃: Redis 토큰 블랙리스트 (선택, 현재 불필요)

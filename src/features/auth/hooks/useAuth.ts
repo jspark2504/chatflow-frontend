@@ -31,14 +31,19 @@ export function useSignup() {
   });
 }
 
-/** JWT 무상태 로그아웃 — 서버 API 없음, 클라이언트 세션 정리 */
+/** 서버 토큰 무효화(Redis 블랙리스트) 후 클라이언트 세션 정리 */
 export function useLogout() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const clearAuth = useAuthStore((state) => state.clearAuth);
   const resetChat = useChatStore((state) => state.resetAll);
 
-  return useCallback(() => {
+  return useCallback(async () => {
+    try {
+      await authService.logout();
+    } catch {
+      // 네트워크 오류 등 — 클라이언트 정리는 계속 진행
+    }
     wsClient.disconnect();
     clearAuth();
     resetChat();

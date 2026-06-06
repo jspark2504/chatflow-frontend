@@ -4,8 +4,7 @@ import { useRouter } from 'next/navigation';
 import useAuthStore from '@/stores/authStore';
 import { useLogout } from '@/features/auth/hooks/useAuth';
 import { useCurrentUser } from '@/features/user/hooks/useUsers';
-import ChatLayout from '@/components/layout/ChatLayout';
-import { nameToColor } from '@/components/layout/ChatLayout';
+import ChatLayout, { nameToColor } from '@/components/layout/ChatLayout';
 
 function IcChevronLeft() {
   return (
