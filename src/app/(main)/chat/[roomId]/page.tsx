@@ -1,7 +1,8 @@
 'use client';
 
-import { use } from 'react';
+import { use, useSyncExternalStore } from 'react';
 import ChatLayout from '@/components/layout/ChatLayout';
+import { wsClient } from '@/lib/websocket';
 import RoomDetailPanel from '@/features/room/components/RoomDetailPanel';
 import MessageList from '@/features/chat/components/MessageList';
 import MessageInput from '@/features/chat/components/MessageInput';
@@ -23,6 +24,8 @@ export default function ChatRoomPage({ params }: { params: Promise<{ roomId: str
 
   const { data: room, isError: roomError } = useRoom(roomId);
   const { messages, hasMore, isLoading, isLoadingMore, loadMore, sendMessage } = useRoomChat(roomId);
+  const wsState = useSyncExternalStore(wsClient.subscribeState, wsClient.getState, () => 'DISCONNECTED' as const);
+  const wsDisconnected = wsState !== 'CONNECTED';
 
   return (
     <ChatLayout rightPanel={<RoomDetailPanel room={room} />}>
@@ -65,7 +68,7 @@ export default function ChatRoomPage({ params }: { params: Promise<{ roomId: str
       />
 
       {/* Input */}
-      <MessageInput onSend={sendMessage} />
+      <MessageInput onSend={sendMessage} disabled={wsDisconnected} />
     </ChatLayout>
   );
 }

@@ -11,16 +11,37 @@ function createWebSocketClient() {
   let retryTimer: ReturnType<typeof setTimeout> | null = null;
   let currentToken = '';
   const handlers = new Set<MessageHandler>();
+  const openHandlers = new Set<() => void>();
+  const stateHandlers = new Set<() => void>();
+  const pendingOutbound: unknown[] = [];
+
+  function setState(next: ConnectionState) {
+    state = next;
+    stateHandlers.forEach((handler) => handler());
+  }
+
+  function flushPending() {
+    if (ws?.readyState !== WebSocket.OPEN) return;
+    while (pendingOutbound.length > 0) {
+      ws.send(JSON.stringify(pendingOutbound.shift()));
+    }
+  }
+
+  function notifyOpen() {
+    openHandlers.forEach((handler) => handler());
+  }
 
   function connect(token: string) {
     currentToken = token;
     if (ws) ws.close();
-    state = 'CONNECTING';
+    setState('CONNECTING');
     ws = new WebSocket(WS_URL, [`access_token.${token}`]);
 
     ws.onopen = () => {
-      state = 'CONNECTED';
+      setState('CONNECTED');
       retryDelay = 1_000;
+      flushPending();
+      notifyOpen();
     };
 
     ws.onmessage = (event) => {
@@ -35,7 +56,7 @@ function createWebSocketClient() {
     ws.onerror = () => ws?.close();
 
     ws.onclose = () => {
-      state = 'DISCONNECTED';
+      setState('DISCONNECTED');
       if (currentToken) scheduleReconnect();
     };
   }
@@ -48,16 +69,27 @@ function createWebSocketClient() {
 
   function disconnect() {
     currentToken = '';
+    pendingOutbound.length = 0;
     if (retryTimer) clearTimeout(retryTimer);
     ws?.close();
     ws = null;
-    state = 'DISCONNECTED';
+    setState('DISCONNECTED');
   }
 
   function send(payload: unknown) {
     if (ws?.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify(payload));
+      return;
     }
+    if (currentToken) {
+      pendingOutbound.push(payload);
+    }
+  }
+
+  function onOpen(handler: () => void): () => void {
+    openHandlers.add(handler);
+    if (state === 'CONNECTED') handler();
+    return () => openHandlers.delete(handler);
   }
 
   function subscribe(handler: MessageHandler): () => void {
@@ -65,11 +97,16 @@ function createWebSocketClient() {
     return () => handlers.delete(handler);
   }
 
+  function subscribeState(handler: () => void): () => void {
+    stateHandlers.add(handler);
+    return () => stateHandlers.delete(handler);
+  }
+
   function getState(): ConnectionState {
     return state;
   }
 
-  return { connect, disconnect, send, subscribe, getState };
+  return { connect, disconnect, send, subscribe, onOpen, subscribeState, getState };
 }
 
 export const wsClient = createWebSocketClient();

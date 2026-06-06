@@ -44,14 +44,16 @@ export function useRoomChat(roomId: number) {
 
     chatService.getMessages(roomId).then((res) => {
       if (cancelled) return;
-      setMessages(roomId, res.messages);
+      // API는 최신순(DESC) — UI·읽음 처리는 시간순(ASC)으로 맞춤
+      const chronological = [...res.messages].reverse();
+      setMessages(roomId, chronological);
       setHasMore(res.hasMore);
       setNextCursor(res.nextCursor);
       setIsLoading(false);
 
-      const lastMsg = res.messages.at(-1);
-      if (lastMsg) {
-        void roomService.markRead(roomId, lastMsg.messageId).then(() => {
+      const latestMsg = chronological.at(-1);
+      if (latestMsg) {
+        void roomService.markRead(roomId, latestMsg.messageId).then(() => {
           queryClient.invalidateQueries({ queryKey: ['rooms'] });
         });
       }
@@ -59,7 +61,9 @@ export function useRoomChat(roomId: number) {
       if (!cancelled) setIsLoading(false);
     });
 
-    wsClient.send({ type: 'JOIN', roomId });
+    const joinRoom = () => wsClient.send({ type: 'JOIN', roomId });
+    joinRoom();
+    const unsubscribeOpen = wsClient.onOpen(joinRoom);
 
     const unsubscribe = wsClient.subscribe((data) => {
       const msg = extractMessage(data as WsFrame);
@@ -72,6 +76,7 @@ export function useRoomChat(roomId: number) {
 
     return () => {
       cancelled = true;
+      unsubscribeOpen();
       unsubscribe();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -82,7 +87,7 @@ export function useRoomChat(roomId: number) {
     setIsLoadingMore(true);
     try {
       const res = await chatService.getMessages(roomId, 20, nextCursor);
-      prependMessages(roomId, res.messages);
+      prependMessages(roomId, [...res.messages].reverse());
       setHasMore(res.hasMore);
       setNextCursor(res.nextCursor);
     } finally {
