@@ -23,3 +23,12 @@ export interface WsPresenceFrame {
   type: 'USER_ONLINE' | 'USER_OFFLINE';
   userId: number;
 }
+
+export interface PendingMessage {
+  clientId: string;
+  roomId: number;
+  senderId: number;
+  content: string;
+  status: 'sending' | 'failed';
+  createdAt: string;
+}

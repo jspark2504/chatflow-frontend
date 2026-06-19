@@ -23,7 +23,7 @@ export default function ChatRoomPage({ params }: { params: Promise<{ roomId: str
   const roomId = Number(roomIdParam);
 
   const { data: room, isError: roomError } = useRoom(roomId);
-  const { messages, hasMore, isLoading, isLoadingMore, loadMore, sendMessage } = useRoomChat(roomId);
+  const { messages, pending, hasMore, isLoading, isLoadingMore, loadMore, sendMessage, retrySend } = useRoomChat(roomId);
   const wsState = useSyncExternalStore(wsClient.subscribeState, wsClient.getState, () => 'DISCONNECTED' as const);
   const wsDisconnected = wsState !== 'CONNECTED';
   const roomAvatar = room ? roomAvatarStyle(room) : null;
@@ -70,11 +70,13 @@ export default function ChatRoomPage({ params }: { params: Promise<{ roomId: str
       <MessageList
         roomId={roomId}
         messages={messages}
+        pending={pending}
         members={room?.members}
         hasMore={hasMore}
         isLoading={isLoading}
         isLoadingMore={isLoadingMore}
         onLoadMore={loadMore}
+        onRetry={retrySend}
       />
 
       {/* Input */}

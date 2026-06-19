@@ -3,7 +3,24 @@
 import { useLayoutEffect, useRef } from 'react';
 import useAuthStore from '@/stores/authStore';
 import { nameToColor } from '@/components/layout/ChatLayout';
-import type { MessageResponse } from '../types/chat.types';
+import type { MessageResponse, PendingMessage } from '../types/chat.types';
+
+function IcRetry() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+      <path d="M3 3v5h5" />
+    </svg>
+  );
+}
+
+function IcSpinner() {
+  return (
+    <svg className="animate-spin" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+    </svg>
+  );
+}
 
 function fmtTime(iso: string): string {
   return new Date(iso).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
@@ -115,21 +132,25 @@ function MsgGroupView({ block, getNickname }: GroupProps) {
 interface MessageListProps {
   roomId: number;
   messages: MessageResponse[];
+  pending?: PendingMessage[];
   members?: Array<{ userId: number; nickname: string }>;
   hasMore: boolean;
   isLoading: boolean;
   isLoadingMore: boolean;
   onLoadMore: () => void;
+  onRetry?: (clientId: string) => void;
 }
 
 export default function MessageList({
   roomId,
   messages,
+  pending = [],
   members = [],
   hasMore,
   isLoading,
   isLoadingMore,
   onLoadMore,
+  onRetry,
 }: MessageListProps) {
   const currentUserId = useAuthStore((s) => s.user?.id);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -234,6 +255,41 @@ export default function MessageList({
           />
         );
       })}
+
+      {pending.map((p) => (
+        <div key={p.clientId} className="flex gap-[11px] mb-[6px] flex-row-reverse">
+          <div className="w-[38px] shrink-0" />
+          <div className="flex flex-col min-w-0 max-w-[66%] items-end">
+            <div className="flex items-end gap-[7px] flex-row-reverse">
+              <div
+                className={`px-[13px] py-[9px] text-[14px] leading-[1.55] break-words whitespace-pre-wrap max-w-full rounded-[16px] rounded-tr-[5px] bg-[#ff7a59] text-white ${
+                  p.status === 'failed' ? 'opacity-50 ring-1 ring-red-400' : 'opacity-60'
+                }`}
+              >
+                {p.content}
+              </div>
+              <div className="flex flex-col gap-[2px] pb-[2px] shrink-0 items-end">
+                {p.status === 'sending' ? (
+                  <span className="text-[#6e7178]"><IcSpinner /></span>
+                ) : (
+                  onRetry && (
+                    <button
+                      onClick={() => onRetry(p.clientId)}
+                      title="재전송"
+                      className="text-red-400 hover:text-red-300 transition-colors"
+                    >
+                      <IcRetry />
+                    </button>
+                  )
+                )}
+                <span className={`text-[10px] whitespace-nowrap ${p.status === 'failed' ? 'text-red-400' : 'text-[#6e7178]'}`}>
+                  {p.status === 'failed' ? '전송 실패' : '전송 중'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
