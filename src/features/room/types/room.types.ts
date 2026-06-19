@@ -13,6 +13,7 @@ export interface RoomResponse {
   unreadCount: number;
   lastReadMessageId: number | null;
   createdAt: string;
+  lastMessageAt: string | null;
   members: RoomMember[];
 }
 
