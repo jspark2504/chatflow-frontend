@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import useAuthStore from '@/stores/authStore';
+import useOnlineStore from '@/stores/onlineStore';
 import { useLogout } from '@/features/auth/hooks/useAuth';
 import { useRooms } from '@/features/room/hooks/useRooms';
 import CreateRoomModal from '@/features/room/components/CreateRoomModal';
@@ -76,12 +77,19 @@ function fmtTime(iso: string): string {
 }
 
 // ── Room row ──────────────────────────────────────────────────────────────────
-function SidebarRoom({ room, isActive }: { room: RoomResponse; isActive: boolean }) {
+function SidebarRoom({ room, isActive, currentUserId }: { room: RoomResponse; isActive: boolean; currentUserId: number | null }) {
+  const isOnline = useOnlineStore((s) => s.isOnline);
   const subtitle =
     room.type === 'DIRECT'
       ? room.members.map((m) => m.nickname).join(' · ')
       : `멤버 ${room.memberCount}명`;
   const { background, initial, shapeClass } = roomAvatarStyle(room);
+
+  const peerUserId =
+    room.type === 'DIRECT' && currentUserId !== null
+      ? (room.members.find((m) => m.userId !== currentUserId)?.userId ?? null)
+      : null;
+  const peerOnline = peerUserId !== null && isOnline(peerUserId);
 
   return (
     <div className="relative px-0">
@@ -95,10 +103,13 @@ function SidebarRoom({ room, isActive }: { room: RoomResponse; isActive: boolean
         }`}
       >
         <div
-          className={`w-11 h-11 ${shapeClass} flex items-center justify-center text-[15px] font-semibold text-white shrink-0`}
+          className={`w-11 h-11 ${shapeClass} flex items-center justify-center text-[15px] font-semibold text-white shrink-0 relative`}
           style={{ background }}
         >
           {initial}
+          {peerOnline && (
+            <span className="absolute right-0 bottom-0 w-[10px] h-[10px] rounded-full bg-[#3ba55d] border-[2px] border-[#161719]" />
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline justify-between gap-2">
@@ -202,7 +213,12 @@ function AppSidebar({ onNewChat }: { onNewChat: () => void }) {
           </p>
         )}
         {filteredRooms.map((room) => (
-          <SidebarRoom key={room.roomId} room={room} isActive={pathname === `/chat/${room.roomId}`} />
+          <SidebarRoom
+            key={room.roomId}
+            room={room}
+            isActive={pathname === `/chat/${room.roomId}`}
+            currentUserId={user ? Number(user.id) : null}
+          />
         ))}
       </div>
 

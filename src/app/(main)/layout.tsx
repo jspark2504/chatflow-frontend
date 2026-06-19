@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import useAuthStore from '@/stores/authStore';
 import { wsClient } from '@/lib/websocket';
+import { useOnlineStatus } from '@/features/status/hooks/useOnlineStatus';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -27,6 +28,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     wsClient.connect(accessToken);
     return () => wsClient.disconnect();
   }, [_hasHydrated, accessToken]);
+
+  // 온라인 상태 스냅샷 초기 로드 + WS 프레즌스 이벤트 구독
+  useOnlineStatus();
 
   if (!mounted || !_hasHydrated || !user) return null;
 

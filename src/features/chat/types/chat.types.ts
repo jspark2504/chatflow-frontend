@@ -18,3 +18,8 @@ export interface SendMessageRequest {
   content: string;
   messageType?: string;
 }
+
+export interface WsPresenceFrame {
+  type: 'USER_ONLINE' | 'USER_OFFLINE';
+  userId: number;
+}

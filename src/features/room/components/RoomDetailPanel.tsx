@@ -1,6 +1,7 @@
 'use client';
 
 import { nameToColor, roomAvatarStyle } from '@/components/layout/ChatLayout';
+import useOnlineStore from '@/stores/onlineStore';
 import type { RoomMember, RoomResponse } from '../types/room.types';
 
 function IcUsers() {
@@ -13,7 +14,7 @@ function IcUsers() {
   );
 }
 
-function MemberRow({ member, isFirst }: { member: RoomMember; isFirst: boolean }) {
+function MemberRow({ member, isFirst, isOnline }: { member: RoomMember; isFirst: boolean; isOnline: boolean }) {
   const color = nameToColor(member.nickname);
   const initial = member.nickname.slice(0, 1).toUpperCase();
   return (
@@ -23,7 +24,9 @@ function MemberRow({ member, isFirst }: { member: RoomMember; isFirst: boolean }
         style={{ background: color }}
       >
         {initial}
-        <span className="absolute right-0 bottom-0 w-[10px] h-[10px] rounded-full bg-[#3ba55d] border-2 border-[#161719]" />
+        {isOnline && (
+          <span className="absolute right-0 bottom-0 w-[10px] h-[10px] rounded-full bg-[#3ba55d] border-2 border-[#161719]" />
+        )}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
@@ -34,7 +37,9 @@ function MemberRow({ member, isFirst }: { member: RoomMember; isFirst: boolean }
             </span>
           )}
         </div>
-        <span className="text-[11.5px] text-[#3ba55d]">온라인</span>
+        <span className={`text-[11.5px] ${isOnline ? 'text-[#3ba55d]' : 'text-[#54565c]'}`}>
+          {isOnline ? '온라인' : '오프라인'}
+        </span>
       </div>
     </div>
   );
@@ -45,6 +50,8 @@ interface RoomDetailPanelProps {
 }
 
 export default function RoomDetailPanel({ room }: RoomDetailPanelProps) {
+  const isOnline = useOnlineStore((s) => s.isOnline);
+
   if (!room) {
     return (
       <aside className="w-[280px] shrink-0 bg-[#161719] border-l border-[#232428] flex flex-col items-center justify-center">
@@ -62,6 +69,7 @@ export default function RoomDetailPanel({ room }: RoomDetailPanelProps) {
   }
 
   const { background: heroBackground, initial: heroInitial, shapeClass: heroShape } = roomAvatarStyle(room);
+  const onlineCount = room.members.filter((m) => isOnline(m.userId)).length;
 
   return (
     <aside className="w-[280px] shrink-0 bg-[#161719] border-l border-[#232428] flex flex-col overflow-hidden">
@@ -83,7 +91,7 @@ export default function RoomDetailPanel({ room }: RoomDetailPanelProps) {
             <div className="text-[10.5px] text-[#6e7178] mt-0.5">참여자</div>
           </div>
           <div className="flex-1 bg-[#232428] rounded-[11px] py-2.5 text-center">
-            <div className="text-[15px] font-bold text-[#3ba55d]">{room.members.length}</div>
+            <div className="text-[15px] font-bold text-[#3ba55d]">{onlineCount}</div>
             <div className="text-[10.5px] text-[#6e7178] mt-0.5">온라인</div>
           </div>
         </div>
@@ -97,7 +105,7 @@ export default function RoomDetailPanel({ room }: RoomDetailPanelProps) {
       </div>
       <div className="flex-1 overflow-y-auto px-[10px] pb-4">
         {room.members.map((m, i) => (
-          <MemberRow key={m.userId} member={m} isFirst={i === 0} />
+          <MemberRow key={m.userId} member={m} isFirst={i === 0} isOnline={isOnline(m.userId)} />
         ))}
       </div>
     </aside>

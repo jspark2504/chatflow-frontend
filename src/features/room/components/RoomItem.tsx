@@ -1,6 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import useOnlineStore from '@/stores/onlineStore';
+import useAuthStore from '@/stores/authStore';
 import type { RoomResponse } from '../types/room.types';
 
 function formatTime(iso: string): string {
@@ -19,6 +21,16 @@ interface RoomItemProps {
 }
 
 export default function RoomItem({ room, isActive = false }: RoomItemProps) {
+  const isOnline = useOnlineStore((s) => s.isOnline);
+  const currentUser = useAuthStore((s) => s.user);
+
+  const myUserId = currentUser ? Number(currentUser.id) : null;
+  const otherMember =
+    room.type === 'DIRECT'
+      ? room.members.find((m) => m.userId !== myUserId)
+      : null;
+  const otherOnline = otherMember ? isOnline(otherMember.userId) : false;
+
   const subtitle =
     room.type === 'DIRECT'
       ? room.members.map((m) => m.nickname).join(' · ')
@@ -31,8 +43,13 @@ export default function RoomItem({ room, isActive = false }: RoomItemProps) {
         isActive ? 'bg-[#2c2e33]' : 'hover:bg-[#232428]'
       }`}
     >
-      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[#3a3c42] flex items-center justify-center text-sm font-semibold text-zinc-300">
-        {room.roomName.slice(0, 1).toUpperCase()}
+      <div className="relative flex-shrink-0">
+        <div className="w-10 h-10 rounded-full bg-[#3a3c42] flex items-center justify-center text-sm font-semibold text-zinc-300">
+          {room.roomName.slice(0, 1).toUpperCase()}
+        </div>
+        {otherOnline && (
+          <span className="absolute right-0 bottom-0 w-[11px] h-[11px] rounded-full bg-[#3ba55d] border-2 border-[#1a1b1e]" />
+        )}
       </div>
 
       <div className="flex-1 min-w-0">
