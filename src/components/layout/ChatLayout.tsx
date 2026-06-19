@@ -11,8 +11,19 @@ import type { RoomResponse } from '@/features/room/types/room.types';
 
 // ── Color utils ───────────────────────────────────────────────────────────────
 const AV_COLORS = ['#7c6af5', '#3ba55d', '#f0b232', '#5865f2', '#eb459e', '#ff7a59'];
+export const GROUP_ROOM_AVATAR = 'linear-gradient(135deg,#5b8cff,#3b6fe0)';
+
 export function nameToColor(name: string): string {
   return AV_COLORS[(name.charCodeAt(0) ?? 0) % AV_COLORS.length];
+}
+
+export function roomAvatarStyle(room: Pick<RoomResponse, 'type' | 'roomName'>) {
+  const isGroup = room.type === 'GROUP';
+  return {
+    initial: room.roomName.slice(0, 1).toUpperCase(),
+    background: isGroup ? GROUP_ROOM_AVATAR : nameToColor(room.roomName),
+    shapeClass: isGroup ? 'rounded-[12px]' : 'rounded-full',
+  };
 }
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
@@ -70,8 +81,7 @@ function SidebarRoom({ room, isActive }: { room: RoomResponse; isActive: boolean
     room.type === 'DIRECT'
       ? room.members.map((m) => m.nickname).join(' · ')
       : `멤버 ${room.memberCount}명`;
-  const color = nameToColor(room.roomName);
-  const initial = room.roomName.slice(0, 1).toUpperCase();
+  const { background, initial, shapeClass } = roomAvatarStyle(room);
 
   return (
     <div className="relative px-0">
@@ -85,8 +95,8 @@ function SidebarRoom({ room, isActive }: { room: RoomResponse; isActive: boolean
         }`}
       >
         <div
-          className="w-11 h-11 rounded-full flex items-center justify-center text-[15px] font-semibold text-white shrink-0"
-          style={{ background: color }}
+          className={`w-11 h-11 ${shapeClass} flex items-center justify-center text-[15px] font-semibold text-white shrink-0`}
+          style={{ background }}
         >
           {initial}
         </div>

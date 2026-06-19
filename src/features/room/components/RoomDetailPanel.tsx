@@ -1,6 +1,6 @@
 'use client';
 
-import { nameToColor } from '@/components/layout/ChatLayout';
+import { nameToColor, roomAvatarStyle } from '@/components/layout/ChatLayout';
 import type { RoomMember, RoomResponse } from '../types/room.types';
 
 function IcUsers() {
@@ -61,16 +61,15 @@ export default function RoomDetailPanel({ room }: RoomDetailPanelProps) {
     );
   }
 
-  const heroColor = nameToColor(room.roomName);
-  const heroInitial = room.roomName.slice(0, 1).toUpperCase();
+  const { background: heroBackground, initial: heroInitial, shapeClass: heroShape } = roomAvatarStyle(room);
 
   return (
     <aside className="w-[280px] shrink-0 bg-[#161719] border-l border-[#232428] flex flex-col overflow-hidden">
       {/* Hero */}
       <div className="flex flex-col items-center px-5 pt-6 pb-5 border-b border-[#232428] text-center">
         <div
-          className="w-[72px] h-[72px] rounded-[20px] flex items-center justify-center text-2xl font-bold text-white shadow-[0_8px_24px_rgba(0,0,0,0.3)]"
-          style={{ background: heroColor }}
+          className={`w-[72px] h-[72px] ${heroShape === 'rounded-[12px]' ? 'rounded-[20px]' : 'rounded-full'} flex items-center justify-center text-2xl font-bold text-white shadow-[0_8px_24px_rgba(0,0,0,0.3)]`}
+          style={{ background: heroBackground }}
         >
           {heroInitial}
         </div>

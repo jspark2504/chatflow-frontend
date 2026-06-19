@@ -1,7 +1,7 @@
 'use client';
 
 import { use, useSyncExternalStore } from 'react';
-import ChatLayout from '@/components/layout/ChatLayout';
+import ChatLayout, { roomAvatarStyle } from '@/components/layout/ChatLayout';
 import { wsClient } from '@/lib/websocket';
 import RoomDetailPanel from '@/features/room/components/RoomDetailPanel';
 import MessageList from '@/features/chat/components/MessageList';
@@ -26,6 +26,7 @@ export default function ChatRoomPage({ params }: { params: Promise<{ roomId: str
   const { messages, hasMore, isLoading, isLoadingMore, loadMore, sendMessage } = useRoomChat(roomId);
   const wsState = useSyncExternalStore(wsClient.subscribeState, wsClient.getState, () => 'DISCONNECTED' as const);
   const wsDisconnected = wsState !== 'CONNECTED';
+  const roomAvatar = room ? roomAvatarStyle(room) : null;
 
   return (
     <ChatLayout rightPanel={<RoomDetailPanel room={room} />}>
@@ -35,9 +36,18 @@ export default function ChatRoomPage({ params }: { params: Promise<{ roomId: str
           <span className="text-[13px] text-red-400">채팅방을 불러오지 못했습니다.</span>
         ) : room ? (
           <>
-            <div className="flex items-center justify-center w-7 h-7 rounded-[9px] bg-[#232428] text-[#a3a6ad]">
-              <IcHash />
-            </div>
+            {room.type === 'GROUP' && roomAvatar ? (
+              <div
+                className="flex items-center justify-center w-7 h-7 rounded-[9px] text-[12px] font-bold text-white"
+                style={{ background: roomAvatar.background }}
+              >
+                {roomAvatar.initial}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center w-7 h-7 rounded-full bg-[#232428] text-[#a3a6ad]">
+                <IcHash />
+              </div>
+            )}
             <div>
               <h2 className="text-[14.5px] font-bold text-[#e9eaee] leading-tight">{room.roomName}</h2>
               <p className="text-[12px] text-[#6e7178] mt-[1px]">
