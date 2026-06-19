@@ -20,12 +20,17 @@ const useChatStore = create<ChatState>((set) => ({
   pendingByRoom: {},
 
   addMessage: (message) =>
-    set((state) => ({
-      messagesByRoom: {
-        ...state.messagesByRoom,
-        [message.roomId]: [...(state.messagesByRoom[message.roomId] ?? []), message],
-      },
-    })),
+    set((state) => {
+      const existing = state.messagesByRoom[message.roomId] ?? [];
+      // 중복 echo(재전송 확인) 시 같은 messageId가 이미 있으면 무시
+      if (existing.some((m) => m.messageId === message.messageId)) return state;
+      return {
+        messagesByRoom: {
+          ...state.messagesByRoom,
+          [message.roomId]: [...existing, message],
+        },
+      };
+    }),
 
   prependMessages: (roomId, messages) =>
     set((state) => ({

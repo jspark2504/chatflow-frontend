@@ -6,6 +6,7 @@ export interface MessageResponse {
   content: string;
   read: boolean;
   createdAt: string;
+  clientId?: string;
 }
 
 export interface MessagePageResponse {

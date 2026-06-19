@@ -98,12 +98,14 @@ export function useRoomChat(roomId: number) {
       const msg = extractMessage(data as WsFrame);
       if (!msg || msg.roomId !== roomIdRef.current) return;
 
-      // Server echo of own message → remove matching pending (oldest same-content 'sending')
+      // Server echo of own message → remove matching pending
       if (String(msg.senderId) === currentUserIdRef.current) {
         const roomPending = useChatStore.getState().pendingByRoom[roomIdRef.current] ?? [];
-        const match = roomPending.find(
-          (m) => m.content === msg.content && m.status === 'sending',
-        );
+        // clientId 기반 매칭 우선 (정상/중복 재전송 모두 처리)
+        // clientId가 없는 구버전 서버 응답은 content 기반 폴백
+        const match = msg.clientId
+          ? roomPending.find((m) => m.clientId === msg.clientId)
+          : roomPending.find((m) => m.content === msg.content && m.status === 'sending');
         if (match) {
           const t = timeoutsRef.current.get(match.clientId);
           if (t !== undefined) clearTimeout(t);
@@ -153,7 +155,7 @@ export function useRoomChat(roomId: number) {
         createdAt: new Date().toISOString(),
       };
       addPending(pending);
-      wsClient.send({ type: 'SEND', roomId, content, messageType: 'TEXT' });
+      wsClient.send({ type: 'SEND', roomId, content, messageType: 'TEXT', clientId });
 
       const t = setTimeout(() => {
         timeoutsRef.current.delete(clientId);
@@ -174,7 +176,7 @@ export function useRoomChat(roomId: number) {
       if (existing !== undefined) clearTimeout(existing);
 
       markSending(roomId, clientId);
-      wsClient.send({ type: 'SEND', roomId, content: target.content, messageType: 'TEXT' });
+      wsClient.send({ type: 'SEND', roomId, content: target.content, messageType: 'TEXT', clientId });
 
       const t = setTimeout(() => {
         timeoutsRef.current.delete(clientId);
